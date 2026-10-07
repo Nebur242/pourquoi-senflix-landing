@@ -196,6 +196,14 @@ h1 em {
   background: var(--panel);
   box-shadow: 0 30px 100px #000b, 0 0 60px #ff20281a;
   transition: box-shadow 240ms ease;
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.brochure-frame:active {
+  cursor: grabbing;
 }
 
 .brochure-frame:focus-visible {
@@ -207,18 +215,7 @@ h1 em {
   display: block;
   width: 100%;
   height: auto;
-  animation: brochure-in 400ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-@keyframes brochure-in {
-  from {
-    opacity: 0.4;
-    transform: scale(1.015);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  pointer-events: none;
 }
 
 .carousel-controls {

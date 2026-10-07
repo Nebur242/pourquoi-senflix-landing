@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import type { PointerEvent as ReactPointerEvent } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const brochures = [
@@ -55,6 +56,7 @@ function Brand() {
 export function WhyCarousel() {
   const [activeIndex, setActiveIndex] = useState(0);
   const imageRef = useRef<HTMLDivElement>(null);
+  const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
   const active = brochures[activeIndex];
 
   const goTo = useCallback((index: number) => {
@@ -63,6 +65,24 @@ export function WhyCarousel() {
 
   const next = useCallback(() => goTo(activeIndex + 1), [activeIndex, goTo]);
   const previous = useCallback(() => goTo(activeIndex - 1), [activeIndex, goTo]);
+
+  function handlePointerDown(event: ReactPointerEvent<HTMLDivElement>) {
+    if (!event.isPrimary || (event.pointerType === "mouse" && event.button !== 0)) return;
+    pointerStartRef.current = { x: event.clientX, y: event.clientY };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function handlePointerUp(event: ReactPointerEvent<HTMLDivElement>) {
+    const start = pointerStartRef.current;
+    pointerStartRef.current = null;
+    if (!start) return;
+
+    const deltaX = event.clientX - start.x;
+    const deltaY = event.clientY - start.y;
+    if (Math.abs(deltaX) < 48 || Math.abs(deltaX) < Math.abs(deltaY) * 1.2) return;
+    if (deltaX < 0) next();
+    else previous();
+  }
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -118,6 +138,11 @@ export function WhyCarousel() {
             role="group"
             aria-roledescription="diapositive"
             aria-label={`${activeIndex + 1} sur ${brochures.length} : ${active.kicker}`}
+            onPointerDown={handlePointerDown}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={() => {
+              pointerStartRef.current = null;
+            }}
           >
             <Image
               key={active.src}
@@ -128,6 +153,7 @@ export function WhyCarousel() {
               height={1254}
               priority={activeIndex === 0}
               sizes="(max-width: 720px) calc(100vw - 32px), (max-width: 1100px) 58vw, 680px"
+              draggable={false}
             />
           </div>
 
