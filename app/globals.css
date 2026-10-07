@@ -53,6 +53,8 @@ button {
 }
 
 .site-shell {
+  display: flex;
+  flex-direction: column;
   height: 100svh;
   min-height: 0;
   overflow: hidden;
@@ -138,12 +140,12 @@ button {
 
 .presentation {
   width: min(820px, calc(100% - 64px));
-  height: calc(100svh - 72px);
+  flex: 1 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: 4px 0 16px;
+  justify-content: space-between;
+  padding: 10px 0 24px;
 }
 
 .sr-only {
@@ -164,12 +166,17 @@ h1 {
 
 .carousel-column {
   width: min(100%, 760px);
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   justify-self: center;
   margin-inline: auto;
 }
 
 .brochure-frame {
-  width: min(100%, calc(100svh - 260px));
+  width: min(100%, 760px, calc(100svh - 300px));
   margin-inline: auto;
   position: relative;
   overflow: hidden;
@@ -198,6 +205,29 @@ h1 {
   width: 100%;
   height: auto;
   pointer-events: none;
+}
+
+.brochure-frame.is-animating {
+  background-position: center;
+  background-size: 100% 100%;
+}
+
+.brochure-image.slide-in-next {
+  animation: slide-in-from-right 360ms cubic-bezier(0.22, 0.75, 0.25, 1) both;
+}
+
+.brochure-image.slide-in-previous {
+  animation: slide-in-from-left 360ms cubic-bezier(0.22, 0.75, 0.25, 1) both;
+}
+
+@keyframes slide-in-from-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes slide-in-from-left {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
 }
 
 .carousel-controls {
@@ -255,30 +285,71 @@ h1 {
 }
 
 .dots {
-  width: 100%;
+  position: relative;
+  width: min(100%, 340px);
+  height: 24px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 15px;
+  justify-content: space-between;
+  margin-inline: auto;
+}
+
+.dots-track {
+  position: absolute;
+  left: 9px;
+  right: 9px;
+  top: 50%;
+  height: 2px;
+  transform: translateY(-50%);
+  background: #706b6c;
+}
+
+.dots-progress {
+  position: absolute;
+  left: 9px;
+  top: 50%;
+  height: 2px;
+  transform: translateY(-50%);
+  background: var(--red);
+  pointer-events: none;
+}
+
+.dots-dash {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  width: 15px;
+  height: 2px;
+  transform: translateY(-50%);
+  background: var(--red);
+  pointer-events: none;
 }
 
 .dot {
-  width: 10px;
-  height: 10px;
+  position: relative;
+  z-index: 1;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
   padding: 0;
-  border: 1px solid #736b6c;
+  border: 2px solid #777273;
   border-radius: 50%;
-  background: transparent;
+  background: #090909;
   cursor: pointer;
-  transition: width 180ms ease, background 180ms ease, border-color 180ms ease;
+  transition: border-color 180ms ease, box-shadow 180ms ease;
 }
 
 .dot.is-active {
-  width: 12px;
-  height: 12px;
   border-color: var(--red);
+  box-shadow: 0 0 12px #ff202899;
+}
+
+.dot.is-active::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
   background: var(--red);
-  box-shadow: 0 0 15px #ff202899;
 }
 
 .primary-cta {
@@ -288,7 +359,8 @@ h1 {
   justify-content: center;
   gap: 18px;
   width: 100%;
-  margin-top: 27px;
+  flex: 0 0 auto;
+  margin-top: 18px;
   border-radius: 999px;
   background: var(--red);
   color: var(--white);
@@ -354,8 +426,7 @@ h1 {
 
   .presentation {
     width: calc(100% - 32px);
-    height: calc(100svh - 62px);
-    padding: 4px 0 14px;
+    padding: 8px 0 max(16px, env(safe-area-inset-bottom));
   }
 
   .carousel-column {
@@ -363,7 +434,7 @@ h1 {
   }
 
   .brochure-frame {
-    width: min(100%, calc(100svh - 240px));
+    width: min(100%, calc(100svh - 280px));
     border-radius: 10px;
   }
 
@@ -380,22 +451,12 @@ h1 {
   }
 
   .dots {
-    gap: 11px;
-  }
-
-  .dot {
-    width: 8px;
-    height: 8px;
-  }
-
-  .dot.is-active {
-    width: 10px;
-    height: 10px;
+    width: min(100%, 272px);
   }
 
   .primary-cta {
     min-height: 48px;
-    margin-top: 14px;
+    margin-top: 12px;
     font-size: 13px;
     letter-spacing: 1.5px;
   }

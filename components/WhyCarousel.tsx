@@ -55,16 +55,31 @@ function Brand() {
 
 export function WhyCarousel() {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [previousSrc, setPreviousSrc] = useState<string | null>(null);
+  const [slideDirection, setSlideDirection] = useState<"next" | "previous">("next");
+  const [isAnimating, setIsAnimating] = useState(false);
   const imageRef = useRef<HTMLDivElement>(null);
   const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
+  const animationTimeoutRef = useRef<number | null>(null);
   const active = brochures[activeIndex];
 
-  const goTo = useCallback((index: number) => {
-    setActiveIndex((index + brochures.length) % brochures.length);
-  }, []);
+  const goTo = useCallback((index: number, direction?: "next" | "previous") => {
+    const normalizedIndex = (index + brochures.length) % brochures.length;
+    if (normalizedIndex === activeIndex) return;
 
-  const next = useCallback(() => goTo(activeIndex + 1), [activeIndex, goTo]);
-  const previous = useCallback(() => goTo(activeIndex - 1), [activeIndex, goTo]);
+    setPreviousSrc(brochures[activeIndex].src);
+    setSlideDirection(direction ?? (normalizedIndex > activeIndex ? "next" : "previous"));
+    setIsAnimating(true);
+    setActiveIndex(normalizedIndex);
+
+    if (animationTimeoutRef.current !== null) {
+      window.clearTimeout(animationTimeoutRef.current);
+    }
+    animationTimeoutRef.current = window.setTimeout(() => setIsAnimating(false), 420);
+  }, [activeIndex]);
+
+  const next = useCallback(() => goTo(activeIndex + 1, "next"), [activeIndex, goTo]);
+  const previous = useCallback(() => goTo(activeIndex - 1, "previous"), [activeIndex, goTo]);
 
   function handlePointerDown(event: ReactPointerEvent<HTMLDivElement>) {
     if (!event.isPrimary || (event.pointerType === "mouse" && event.button !== 0)) return;
@@ -113,9 +128,11 @@ export function WhyCarousel() {
     return () => window.removeEventListener("load", preloadRemainingBrochures);
   }, []);
 
-  useEffect(() => {
-    imageRef.current?.focus({ preventScroll: true });
-  }, [activeIndex]);
+  useEffect(() => () => {
+    if (animationTimeoutRef.current !== null) {
+      window.clearTimeout(animationTimeoutRef.current);
+    }
+  }, []);
 
   return (
     <main className="site-shell">
@@ -136,7 +153,7 @@ export function WhyCarousel() {
 
         <div className="carousel-column">
           <div
-            className="brochure-frame"
+            className={`brochure-frame${isAnimating ? " is-animating" : ""}`}
             ref={imageRef}
             tabIndex={-1}
             role="group"
@@ -147,14 +164,17 @@ export function WhyCarousel() {
             onPointerCancel={() => {
               pointerStartRef.current = null;
             }}
+            style={{
+              backgroundImage: isAnimating && previousSrc ? `url("${previousSrc}")` : undefined,
+            }}
           >
             <Image
               key={active.src}
-              className="brochure-image"
               src={active.src}
               alt={active.alt}
               width={1254}
               height={1254}
+              className={`brochure-image${isAnimating ? ` slide-in-${slideDirection}` : ""}`}
               priority={activeIndex === 0}
               unoptimized
               sizes="(max-width: 720px) calc(100vw - 32px), (max-width: 1100px) 58vw, 680px"
@@ -178,6 +198,22 @@ export function WhyCarousel() {
                 <span>/ 06</span>
               </p>
               <div className="dots" role="tablist" aria-label="Choisir une brochure">
+                <span className="dots-track" aria-hidden="true" />
+                <span
+                  className="dots-progress"
+                  aria-hidden="true"
+                  style={{
+                    width: `calc(${(activeIndex / (brochures.length - 1)) * 100}% - ${(activeIndex / (brochures.length - 1)) * 18}px)`,
+                  }}
+                />
+                <span
+                  className="dots-dash"
+                  aria-hidden="true"
+                  style={{
+                    left: `calc(${(activeIndex / (brochures.length - 1)) * 100}% + ${18 - (activeIndex / (brochures.length - 1)) * 18}px)`,
+                    visibility: activeIndex === brochures.length - 1 ? "hidden" : "visible",
+                  }}
+                />
                 {brochures.map((brochure, index) => (
                   <button
                     key={brochure.src}
@@ -202,10 +238,11 @@ export function WhyCarousel() {
             </button>
           </div>
 
-          <a className="primary-cta" href="https://www.senflix.app/">
-            Découvrir Senflix <span aria-hidden="true">→</span>
-          </a>
         </div>
+
+        <a className="primary-cta" href="https://founders.senflix.app/">
+          Rejoindre Senflix <span aria-hidden="true">→</span>
+        </a>
       </section>
 
       <footer className="site-footer">
