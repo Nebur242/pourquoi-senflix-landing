@@ -57,6 +57,11 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="fr" className={geist.variable}>
+      <head>
+        <link rel="preload" as="image" href="/brochures/01_le_constat.png" />
+        <link rel="preload" as="image" href="/brochures/02_le_defi.png" />
+        <link rel="preload" as="image" href="/brochures/03_contenu_premium.png" />
+      </head>
       <body>{children}</body>
     </html>
   );

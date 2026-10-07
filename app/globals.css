@@ -53,7 +53,8 @@ button {
 }
 
 .site-shell {
-  min-height: 100svh;
+  height: 100svh;
+  min-height: 0;
   overflow: hidden;
   position: relative;
   isolation: isolate;
@@ -97,18 +98,17 @@ button {
 }
 
 .site-header,
-.presentation,
-.site-footer {
+.presentation {
   width: min(1280px, calc(100% - 112px));
   margin-inline: auto;
 }
 
 .site-header {
-  min-height: 116px;
+  height: 72px;
+  flex: 0 0 72px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 24px;
+  justify-content: center;
   position: relative;
   z-index: 2;
 }
@@ -138,57 +138,39 @@ button {
 
 .presentation {
   width: min(820px, calc(100% - 64px));
-  min-height: calc(100svh - 116px);
+  height: calc(100svh - 72px);
+  min-height: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 20px;
-  padding: 4px 0 48px;
+  padding: 4px 0 16px;
 }
 
-.intro-copy {
-  max-width: none;
-  position: relative;
-  z-index: 1;
-  text-align: center;
-}
-
-.eyebrow {
-  margin: 0;
-  color: var(--white);
-  font-size: 12px;
-  letter-spacing: 4px;
-  text-transform: uppercase;
-}
-
-.eyebrow-line {
-  display: inline-block;
-  width: 40px;
-  height: 2px;
-  margin: 0 16px 4px 0;
-  background: var(--red);
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 h1 {
-  display: none;
-}
-
-h1 em {
-  color: var(--red);
-  font-style: normal;
-}
-
-.intro-description,
-.intro-note {
-  display: none;
+  margin: 0;
 }
 
 .carousel-column {
   width: min(100%, 760px);
   justify-self: center;
+  margin-inline: auto;
 }
 
 .brochure-frame {
+  width: min(100%, calc(100svh - 260px));
+  margin-inline: auto;
   position: relative;
   overflow: hidden;
   border: 1px solid #ff202855;
@@ -335,40 +317,28 @@ h1 em {
 }
 
 @media (max-width: 900px) {
-  .site-header,
-  .presentation {
+  .site-header {
     width: min(100% - 48px, 680px);
   }
 
   .presentation {
-    min-height: calc(100svh - 96px);
-    gap: 20px;
-  }
-
-  .intro-copy {
-    max-width: none;
+    width: min(100% - 48px, 680px);
   }
 
   .carousel-column {
     width: 100%;
   }
+
 }
 
 @media (max-width: 720px) {
-  .site-shell {
-    min-height: 100svh;
-    background:
-      radial-gradient(circle at 50% 30%, #250709 0, transparent 45%),
-      var(--black);
-  }
-
-  .site-header,
-  .presentation {
+  .site-header {
     width: calc(100% - 32px);
   }
 
   .site-header {
-    min-height: 78px;
+    height: 62px;
+    flex-basis: 62px;
   }
 
   .brand {
@@ -382,31 +352,10 @@ h1 em {
     height: 21px;
   }
 
-  .header-link {
-    display: none;
-  }
-
   .presentation {
-    min-height: calc(100svh - 78px);
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    padding: 14px 0 30px;
-  }
-
-  .intro-copy {
-    max-width: none;
-    text-align: center;
-  }
-
-  .eyebrow {
-    font-size: 10px;
-    letter-spacing: 3px;
-  }
-
-  .eyebrow-line {
-    width: 28px;
-    margin-right: 10px;
+    width: calc(100% - 32px);
+    height: calc(100svh - 62px);
+    padding: 4px 0 14px;
   }
 
   .carousel-column {
@@ -414,13 +363,14 @@ h1 em {
   }
 
   .brochure-frame {
+    width: min(100%, calc(100svh - 240px));
     border-radius: 10px;
   }
 
   .carousel-controls {
     grid-template-columns: 48px 1fr 48px;
     gap: 10px;
-    margin-top: 17px;
+    margin-top: 12px;
   }
 
   .circle-button {
@@ -444,12 +394,11 @@ h1 em {
   }
 
   .primary-cta {
-    min-height: 54px;
-    margin-top: 20px;
+    min-height: 48px;
+    margin-top: 14px;
     font-size: 13px;
     letter-spacing: 1.5px;
   }
-
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -95,6 +95,25 @@ export function WhyCarousel() {
   }, [next, previous]);
 
   useEffect(() => {
+    const preloadRemainingBrochures = () => {
+      brochures.slice(3).forEach(({ src }) => {
+        const image = new window.Image();
+        image.decoding = "async";
+        image.fetchPriority = "low";
+        image.src = src;
+      });
+    };
+
+    if (document.readyState === "complete") {
+      const timeoutId = window.setTimeout(preloadRemainingBrochures, 250);
+      return () => window.clearTimeout(timeoutId);
+    }
+
+    window.addEventListener("load", preloadRemainingBrochures, { once: true });
+    return () => window.removeEventListener("load", preloadRemainingBrochures);
+  }, []);
+
+  useEffect(() => {
     imageRef.current?.focus({ preventScroll: true });
   }, [activeIndex]);
 
@@ -113,22 +132,7 @@ export function WhyCarousel() {
       </header>
 
       <section className="presentation" id="contenu" aria-labelledby="page-title">
-        <div className="intro-copy">
-          <p className="eyebrow">
-            <span className="eyebrow-line" aria-hidden="true" /> Pourquoi Senflix
-          </p>
-          <h1 id="page-title">
-            Le contenu africain <em>mérite plus.</em>
-          </h1>
-          <p className="intro-description">
-            Les audiences sont là. Les créateurs aussi. Senflix imagine une
-            nouvelle façon de donner plus de valeur aux histoires qui nous
-            ressemblent.
-          </p>
-          <p className="intro-note">
-            Faites défiler les six idées qui ont donné naissance à Senflix.
-          </p>
-        </div>
+        <h1 id="page-title" className="sr-only">Pourquoi Senflix ?</h1>
 
         <div className="carousel-column">
           <div
@@ -152,6 +156,7 @@ export function WhyCarousel() {
               width={1254}
               height={1254}
               priority={activeIndex === 0}
+              unoptimized
               sizes="(max-width: 720px) calc(100vw - 32px), (max-width: 1100px) 58vw, 680px"
               draggable={false}
             />
