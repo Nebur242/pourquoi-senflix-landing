@@ -55,31 +55,17 @@ function Brand() {
 
 export function WhyCarousel() {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [previousSrc, setPreviousSrc] = useState<string | null>(null);
-  const [slideDirection, setSlideDirection] = useState<"next" | "previous">("next");
-  const [isAnimating, setIsAnimating] = useState(false);
-  const imageRef = useRef<HTMLDivElement>(null);
   const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
-  const animationTimeoutRef = useRef<number | null>(null);
   const active = brochures[activeIndex];
 
-  const goTo = useCallback((index: number, direction?: "next" | "previous") => {
+  const goTo = useCallback((index: number) => {
     const normalizedIndex = (index + brochures.length) % brochures.length;
     if (normalizedIndex === activeIndex) return;
-
-    setPreviousSrc(brochures[activeIndex].src);
-    setSlideDirection(direction ?? (normalizedIndex > activeIndex ? "next" : "previous"));
-    setIsAnimating(true);
     setActiveIndex(normalizedIndex);
-
-    if (animationTimeoutRef.current !== null) {
-      window.clearTimeout(animationTimeoutRef.current);
-    }
-    animationTimeoutRef.current = window.setTimeout(() => setIsAnimating(false), 420);
   }, [activeIndex]);
 
-  const next = useCallback(() => goTo(activeIndex + 1, "next"), [activeIndex, goTo]);
-  const previous = useCallback(() => goTo(activeIndex - 1, "previous"), [activeIndex, goTo]);
+  const next = useCallback(() => goTo(activeIndex + 1), [activeIndex, goTo]);
+  const previous = useCallback(() => goTo(activeIndex - 1), [activeIndex, goTo]);
 
   function handlePointerDown(event: ReactPointerEvent<HTMLDivElement>) {
     if (!event.isPrimary || (event.pointerType === "mouse" && event.button !== 0)) return;
@@ -128,12 +114,6 @@ export function WhyCarousel() {
     return () => window.removeEventListener("load", preloadRemainingBrochures);
   }, []);
 
-  useEffect(() => () => {
-    if (animationTimeoutRef.current !== null) {
-      window.clearTimeout(animationTimeoutRef.current);
-    }
-  }, []);
-
   return (
     <main className="site-shell">
       <div className="ambient ambient-one" />
@@ -153,8 +133,7 @@ export function WhyCarousel() {
 
         <div className="carousel-column">
           <div
-            className={`brochure-frame${isAnimating ? " is-animating" : ""}`}
-            ref={imageRef}
+            className="brochure-frame"
             tabIndex={-1}
             role="group"
             aria-roledescription="diapositive"
@@ -164,9 +143,6 @@ export function WhyCarousel() {
             onPointerCancel={() => {
               pointerStartRef.current = null;
             }}
-            style={{
-              backgroundImage: isAnimating && previousSrc ? `url("${previousSrc}")` : undefined,
-            }}
           >
             <Image
               key={active.src}
@@ -174,7 +150,7 @@ export function WhyCarousel() {
               alt={active.alt}
               width={1254}
               height={1254}
-              className={`brochure-image${isAnimating ? ` slide-in-${slideDirection}` : ""}`}
+              className="brochure-image"
               priority={activeIndex === 0}
               unoptimized
               sizes="(max-width: 720px) calc(100vw - 32px), (max-width: 1100px) 58vw, 680px"

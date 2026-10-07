@@ -207,29 +207,6 @@ h1 {
   pointer-events: none;
 }
 
-.brochure-frame.is-animating {
-  background-position: center;
-  background-size: 100% 100%;
-}
-
-.brochure-image.slide-in-next {
-  animation: slide-in-from-right 360ms cubic-bezier(0.22, 0.75, 0.25, 1) both;
-}
-
-.brochure-image.slide-in-previous {
-  animation: slide-in-from-left 360ms cubic-bezier(0.22, 0.75, 0.25, 1) both;
-}
-
-@keyframes slide-in-from-right {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
-}
-
-@keyframes slide-in-from-left {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(0); }
-}
-
 .carousel-controls {
   display: grid;
   grid-template-columns: 64px 1fr 64px;
