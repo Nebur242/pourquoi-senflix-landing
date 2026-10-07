@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: "/" },
   robots: { index: true, follow: true },
-  icons: { icon: "/icon.svg" },
+  icons: { icon: "/brand/senflix-icon.png" },
   openGraph: {
     title,
     description,

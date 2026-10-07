@@ -36,19 +36,17 @@ const brochures = [
   },
 ] as const;
 
-function SenflixMark() {
-  return (
-    <span className="brand-mark" aria-hidden="true">
-      <span />
-      <span />
-    </span>
-  );
-}
-
 function Brand() {
   return (
     <span className="brand" aria-label="Senflix">
-      <SenflixMark />
+      <Image
+        className="brand-mark"
+        src="/brand/senflix-icon.png"
+        alt=""
+        width={23}
+        height={25}
+        aria-hidden="true"
+      />
       <span>SENFLIX</span>
     </span>
   );

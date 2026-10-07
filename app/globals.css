@@ -126,78 +126,35 @@ button {
 .brand-mark {
   width: 23px;
   height: 25px;
-  display: inline-block;
-  position: relative;
-  transform: skewY(-10deg);
-}
-
-.brand-mark::before,
-.brand-mark span {
-  position: absolute;
   display: block;
-  content: "";
-  border: 3px solid var(--red);
-  border-left: 0;
-  border-radius: 0 6px 6px 0;
-  transform: rotate(30deg);
-}
-
-.brand-mark::before {
-  width: 12px;
-  height: 19px;
-  left: 0;
-  top: 3px;
-}
-
-.brand-mark span:first-child {
-  width: 12px;
-  height: 13px;
-  left: 7px;
-  top: 6px;
-}
-
-.brand-mark span:last-child {
-  width: 7px;
-  height: 7px;
-  left: 2px;
-  top: 9px;
-  border-width: 2px;
+  object-fit: contain;
+  flex: 0 0 auto;
+  mix-blend-mode: multiply;
 }
 
 .header-link {
-  color: var(--muted);
-  font-size: 12px;
-  letter-spacing: 1.4px;
-  text-transform: uppercase;
-  transition: color 180ms ease;
-}
-
-.header-link span {
-  color: var(--red);
-  font-size: 16px;
-  margin-left: 8px;
-}
-
-.header-link:hover {
-  color: var(--white);
+  display: none;
 }
 
 .presentation {
-  min-height: calc(100svh - 202px);
-  display: grid;
-  grid-template-columns: minmax(280px, 0.75fr) minmax(440px, 1.15fr);
-  align-items: center;
-  gap: clamp(56px, 8vw, 132px);
-  padding: 36px 0 70px;
+  width: min(820px, calc(100% - 64px));
+  min-height: calc(100svh - 116px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 20px;
+  padding: 4px 0 48px;
 }
 
 .intro-copy {
-  max-width: 450px;
+  max-width: none;
   position: relative;
   z-index: 1;
+  text-align: center;
 }
 
 .eyebrow {
+  margin: 0;
   color: var(--white);
   font-size: 12px;
   letter-spacing: 4px;
@@ -213,13 +170,7 @@ button {
 }
 
 h1 {
-  max-width: 510px;
-  margin: 27px 0 26px;
-  font-size: clamp(54px, 6vw, 88px);
-  line-height: 0.96;
-  letter-spacing: -5px;
-  font-weight: 820;
-  text-transform: uppercase;
+  display: none;
 }
 
 h1 em {
@@ -227,25 +178,14 @@ h1 em {
   font-style: normal;
 }
 
-.intro-description {
-  max-width: 415px;
-  color: #d0cdce;
-  font-size: clamp(17px, 1.55vw, 21px);
-  line-height: 1.55;
-}
-
+.intro-description,
 .intro-note {
-  margin-top: 35px;
-  padding-top: 18px;
-  border-top: 1px solid #ffffff22;
-  color: var(--soft-muted);
-  font-size: 13px;
-  line-height: 1.65;
+  display: none;
 }
 
 .carousel-column {
-  width: min(100%, 680px);
-  justify-self: end;
+  width: min(100%, 760px);
+  justify-self: center;
 }
 
 .brochure-frame {
@@ -394,45 +334,26 @@ h1 em {
 }
 
 .site-footer {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  padding: 0 0 28px;
-  color: var(--soft-muted);
-  font-size: 10px;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-}
-
-.site-footer span:last-child {
-  color: #cbc6c7;
-}
-
-.footer-rule {
-  width: 45px;
-  height: 1px;
-  background: var(--red);
+  display: none;
 }
 
 @media (max-width: 900px) {
   .site-header,
-  .presentation,
-  .site-footer {
+  .presentation {
     width: min(100% - 48px, 680px);
   }
 
   .presentation {
-    grid-template-columns: 1fr;
-    gap: 45px;
+    min-height: calc(100svh - 96px);
+    gap: 20px;
   }
 
   .intro-copy {
-    max-width: 600px;
+    max-width: none;
   }
 
   .carousel-column {
     width: 100%;
-    justify-self: stretch;
   }
 }
 
@@ -445,8 +366,7 @@ h1 em {
   }
 
   .site-header,
-  .presentation,
-  .site-footer {
+  .presentation {
     width: calc(100% - 32px);
   }
 
@@ -461,9 +381,8 @@ h1 em {
   }
 
   .brand-mark {
-    transform: scale(0.82) skewY(-10deg);
-    transform-origin: left center;
-    margin-right: -3px;
+    width: 20px;
+    height: 21px;
   }
 
   .header-link {
@@ -471,14 +390,15 @@ h1 em {
   }
 
   .presentation {
-    min-height: 0;
-    display: block;
-    padding: 20px 0 38px;
+    min-height: calc(100svh - 78px);
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    padding: 14px 0 30px;
   }
 
   .intro-copy {
     max-width: none;
-    margin-bottom: 20px;
     text-align: center;
   }
 
@@ -490,13 +410,6 @@ h1 em {
   .eyebrow-line {
     width: 28px;
     margin-right: 10px;
-  }
-
-  /* The mobile layout intentionally keeps the approved version lean: no large intro block. */
-  h1,
-  .intro-description,
-  .intro-note {
-    display: none;
   }
 
   .carousel-column {
@@ -540,17 +453,6 @@ h1 em {
     letter-spacing: 1.5px;
   }
 
-  .site-footer {
-    justify-content: center;
-    padding-bottom: 20px;
-    font-size: 8px;
-    letter-spacing: 2px;
-  }
-
-  .site-footer span:last-child,
-  .footer-rule {
-    display: none;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
