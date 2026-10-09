@@ -1,8 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Geist } from "next/font/google";
+import { Anton, Geist } from "next/font/google";
 import "./globals.css";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist" });
+const anton = Anton({
+  subsets: ["latin", "latin-ext"],
+  weight: "400",
+  variable: "--font-display",
+  display: "swap",
+});
 
 const title = "Pourquoi Senflix ? — Le contenu africain mérite plus.";
 const description =
@@ -32,10 +38,11 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/brochures/06_appel_a_decouvrir.png",
+        url: "/brochures/06_appel_a_decouvrir.webp",
+        type: "image/webp",
         width: 1254,
         height: 1254,
-        alt: "Découvrez Senflix",
+        alt: "Le talent est ici : votre audience est là, offrez-lui plus.",
       },
     ],
   },
@@ -43,7 +50,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title,
     description,
-    images: ["/brochures/06_appel_a_decouvrir.png"],
+    images: ["/brochures/06_appel_a_decouvrir.webp"],
   },
 };
 
@@ -56,11 +63,11 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="fr" className={geist.variable}>
+    <html lang="fr" className={`${geist.variable} ${anton.variable}`}>
       <head>
-        <link rel="preload" as="image" href="/brochures/01_le_constat.png" />
-        <link rel="preload" as="image" href="/brochures/02_le_defi.png" />
-        <link rel="preload" as="image" href="/brochures/03_contenu_premium.png" />
+        <link rel="preload" as="image" type="image/webp" href="/brochures/01_le_constat.webp" />
+        <link rel="preload" as="image" type="image/webp" href="/brochures/02_le_defi.webp" />
+        <link rel="preload" as="image" type="image/webp" href="/brochures/03_contenu_premium.webp" />
       </head>
       <body>{children}</body>
     </html>
