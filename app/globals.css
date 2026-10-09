@@ -327,7 +327,7 @@ p {
     linear-gradient(110deg, transparent 30%, #ffffff0a 50%, transparent 70%) 0 0 / 250% 100%,
     var(--panel);
   box-shadow: 0 24px 80px #000c, 0 0 48px #ff202814;
-  cursor: grab;
+  cursor: zoom-in;
   touch-action: pan-y;
   user-select: none;
   -webkit-user-select: none;
@@ -393,6 +393,182 @@ p {
   object-fit: cover;
   pointer-events: none;
   -webkit-user-drag: none;
+}
+
+/* While the brochure is morphed into the lightbox, leave its slot empty. */
+.frame[data-zoomed] .slide.is-shown,
+.frame[data-zoomed] .expand-button {
+  visibility: hidden;
+  transition: none;
+}
+
+.expand-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 4;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid #ffffff2e;
+  border-radius: 50%;
+  background: #050505a6;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  font-size: 16px;
+  cursor: pointer;
+  opacity: 0.85;
+  transition: opacity 180ms ease, transform 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.frame:hover .expand-button,
+.expand-button:focus-visible {
+  opacity: 1;
+}
+
+.expand-button:hover {
+  border-color: var(--red);
+  background: #2b0d0fd9;
+  transform: scale(1.06);
+}
+
+.expand-button:focus-visible {
+  outline-offset: 2px;
+}
+
+/* ---------- Lightbox ---------- */
+
+html.is-scroll-locked,
+html.is-scroll-locked body {
+  overflow: hidden;
+}
+
+.lightbox {
+  --lightbox-size: min(calc(100vw - 32px), calc(100dvh - 160px), 1254px);
+
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  background: transparent;
+  color: var(--white);
+}
+
+.lightbox[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.lightbox::backdrop {
+  background: transparent;
+}
+
+.lightbox.is-preparing {
+  opacity: 0;
+}
+
+.lightbox-backdrop {
+  position: absolute;
+  inset: 0;
+  background: #050505e0;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+.lightbox-bar,
+.lightbox-nav {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  width: calc(100% - 32px);
+  max-width: 1254px;
+  margin-inline: auto;
+  display: flex;
+  align-items: center;
+}
+
+.lightbox-bar {
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 64px;
+  padding-top: env(safe-area-inset-top);
+}
+
+.lightbox-caption {
+  min-width: 0;
+}
+
+.lightbox-stage {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+}
+
+.lightbox-figure {
+  width: var(--lightbox-size);
+  aspect-ratio: 1;
+  display: grid;
+  overflow: hidden;
+  border: 1px solid #ff20284d;
+  border-radius: 14px;
+  background: var(--panel);
+  box-shadow: 0 40px 120px #000, 0 0 80px #ff20281f;
+  transform-origin: center;
+  will-change: transform;
+  /* Allow native pinch-zoom; horizontal one-finger swipes navigate. */
+  touch-action: pan-y pinch-zoom;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.lightbox-figure[data-zoomed] {
+  cursor: grab;
+  /* Our own one-finger pan takes over; native pinch stays available. */
+  touch-action: pinch-zoom;
+}
+
+.lightbox-figure:not([data-zoomed]) {
+  cursor: zoom-in;
+}
+
+.lightbox-zoom {
+  grid-area: 1 / 1;
+  display: grid;
+  width: 100%;
+  height: 100%;
+  transform-origin: 0 0;
+  transition: transform 280ms var(--ease-out);
+}
+
+.lightbox-zoom.is-panning {
+  transition: none;
+}
+
+.lightbox-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+.lightbox-nav {
+  justify-content: center;
+  gap: 16px;
+  min-height: 80px;
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* ---------- Controls ---------- */
@@ -877,6 +1053,39 @@ p {
     flex: 0 0 40px;
     height: 1px;
     background: var(--line-strong);
+  }
+}
+
+@media (min-width: 1024px) {
+  .lightbox {
+    --lightbox-size: min(calc(100vw - 240px), calc(100dvh - 112px), 1254px);
+  }
+
+  .lightbox-bar {
+    width: calc(100% - 64px);
+    max-width: none;
+  }
+
+  /* Arrows flank the brochure on wide screens. */
+  .lightbox-nav {
+    position: absolute;
+    inset: 0;
+    width: auto;
+    max-width: none;
+    margin: 0;
+    padding: 0 32px;
+    justify-content: space-between;
+    pointer-events: none;
+  }
+
+  .lightbox-nav .icon-button {
+    width: 56px;
+    height: 56px;
+    pointer-events: auto;
+  }
+
+  .lightbox-stage {
+    padding-bottom: 48px;
   }
 }
 
