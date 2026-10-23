@@ -909,6 +909,37 @@ html.is-scroll-locked body {
   cursor: not-allowed;
 }
 
+/* Consent line under the submit button: small and muted (about 6:1 on the panel). */
+.contact-consent {
+  margin-top: -6px;
+  color: var(--soft-muted);
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+
+.contact-consent-link {
+  color: var(--muted);
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 2px;
+  transition: color 160ms ease, text-decoration-color 160ms ease;
+}
+
+.contact-consent-link:hover {
+  color: var(--white);
+  text-decoration-color: currentColor;
+}
+
+.contact-consent-link:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 2px;
+  color: var(--white);
+}
+
 .contact-spinner {
   width: 16px;
   height: 16px;

@@ -545,6 +545,19 @@ export function ContactModal({ open, onClose }: Readonly<{ open: boolean; onClos
                 )}
               </button>
 
+              <p className="contact-consent">
+                En envoyant, vous acceptez que Senflix vous recontacte au sujet du programme.{" "}
+                <a
+                  className="contact-consent-link"
+                  href="https://founders.senflix.app/politique-de-confidentialite"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Vos coordonnées
+                </a>{" "}
+                ne servent qu’à cela.
+              </p>
+
               <p className="contact-status" role="status" aria-live="polite">
                 {status.kind === "submitting" ? <span className="visually-hidden">Envoi en cours…</span> : null}
                 {status.kind === "error" ? <span className="contact-status-error">{status.message}</span> : null}
