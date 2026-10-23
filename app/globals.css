@@ -176,6 +176,8 @@ p {
 }
 
 .header-tag {
+  /* Hidden on phones: the hero eyebrow repeats it and the header needs the room for the CTA. */
+  display: none;
   color: var(--soft-muted);
   font-size: 11px;
   font-weight: 600;
@@ -183,8 +185,50 @@ p {
   text-transform: uppercase;
 }
 
+/* Compact "Nous contacter" pill below desktop; full label from 1024px. */
 .header-link {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 14px;
+  background: none;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 180ms ease, border-color 180ms ease;
+}
+
+.header-link:hover {
+  color: var(--white);
+  border-color: var(--red);
+}
+
+.header-link-full {
   display: none;
+}
+
+/* Very narrow phones (320px class): drop the arrow and tighten so the pill sits beside the brand. */
+@media (max-width: 359px) {
+  .site-header {
+    gap: 12px;
+  }
+
+  .header-link {
+    padding: 0 12px;
+    letter-spacing: 0.06em;
+  }
+
+  .header-link .icon {
+    display: none;
+  }
 }
 
 /* ---------- Showcase grid ---------- */
@@ -1192,6 +1236,10 @@ html.is-scroll-locked body {
     width: calc(100% - 64px);
   }
 
+  .header-tag {
+    display: block;
+  }
+
   .brand {
     font-size: 19px;
   }
@@ -1237,26 +1285,19 @@ html.is-scroll-locked body {
   }
 
   .header-link {
-    display: inline-flex;
-    background: none;
-    cursor: pointer;
-    align-items: center;
     gap: 8px;
     min-height: 44px;
     padding: 0 20px;
-    border: 1px solid var(--line-strong);
-    border-radius: 999px;
-    color: var(--muted);
     font-size: 13px;
-    font-weight: 650;
     letter-spacing: 0.12em;
-    text-transform: uppercase;
-    transition: color 180ms ease, border-color 180ms ease;
   }
 
-  .header-link:hover {
-    color: var(--white);
-    border-color: var(--red);
+  .header-link-full {
+    display: inline;
+  }
+
+  .header-link-short {
+    display: none;
   }
 
   .showcase {

@@ -668,7 +668,10 @@ export function WhyCarousel() {
           onClick={() => setIsContactOpen(true)}
           aria-haspopup="dialog"
         >
-          Rejoindre les créateurs fondateurs <Icon name="arrow" />
+          {/* Only one label is displayed per breakpoint; display:none keeps the hidden one out of the accessible name. */}
+          <span className="header-link-full">Rejoindre les créateurs fondateurs</span>
+          <span className="header-link-short">Nous contacter</span>
+          <Icon name="arrow" />
         </button>
       </header>
 
