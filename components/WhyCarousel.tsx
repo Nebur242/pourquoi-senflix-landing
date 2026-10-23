@@ -10,6 +10,7 @@ import type {
   SyntheticEvent,
 } from "react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
+import { ContactModal } from "./ContactModal";
 
 /** Time each brochure stays on screen while the slideshow plays. */
 const AUTOPLAY_MS = 8000;
@@ -201,7 +202,7 @@ function Brand() {
 function Icon({
   name,
 }: {
-  name: "prev" | "next" | "play" | "pause" | "arrow" | "external" | "expand" | "close";
+  name: "prev" | "next" | "play" | "pause" | "arrow" | "expand" | "close";
 }) {
   const paths: Record<typeof name, string> = {
     prev: "M15 5l-7 7 7 7",
@@ -209,7 +210,6 @@ function Icon({
     play: "M8 5.5v13l10.5-6.5z",
     pause: "M8 5h3v14H8zM13 5h3v14h-3z",
     arrow: "M4 12h15M13 6l6 6-6 6",
-    external: "M7 17L17 7M9 7h8v8",
     expand: "M14 4h6v6M10 20H4v-6M20 4l-6.5 6.5M4 20l6.5-6.5",
     close: "M6 6l12 12M18 6L6 18",
   };
@@ -248,6 +248,7 @@ export function WhyCarousel() {
   const [hasFocusVisible, setHasFocusVisible] = useState(false);
   const [isPointerDown, setIsPointerDown] = useState(false);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [isContactOpen, setIsContactOpen] = useState(false);
 
   const loadedRef = useRef<boolean[]>(brochures.map(() => false));
   const activeIndexRef = useRef(0);
@@ -278,7 +279,8 @@ export function WhyCarousel() {
     !isPointerDown &&
     !isPageHidden &&
     !isWaitingForImage &&
-    !isLightboxOpen;
+    !isLightboxOpen &&
+    !isContactOpen;
 
   const active = brochures[activeIndex];
 
@@ -597,13 +599,15 @@ export function WhyCarousel() {
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+      // Arrow keys belong to the form controls while the contact modal is open.
+      if (isContactOpen) return;
       if (event.key === "ArrowRight") next();
       else if (event.key === "ArrowLeft") previous();
     }
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [next, previous]);
+  }, [next, previous, isContactOpen]);
 
   /* Mount (and therefore fetch) the remaining brochures once the page has loaded. */
   useEffect(() => {
@@ -658,9 +662,14 @@ export function WhyCarousel() {
       <header className="site-header">
         <Brand />
         <p className="header-tag">Pourquoi Senflix ?</p>
-        <a className="header-link" href="https://founders.senflix.app/">
-          Rejoindre les créateurs fondateurs <Icon name="external" />
-        </a>
+        <button
+          type="button"
+          className="header-link"
+          onClick={() => setIsContactOpen(true)}
+          aria-haspopup="dialog"
+        >
+          Rejoindre les créateurs fondateurs <Icon name="arrow" />
+        </button>
       </header>
 
       <main className="showcase" id="contenu">
@@ -799,9 +808,14 @@ export function WhyCarousel() {
         </section>
 
         <div className="cta-row">
-          <a className="primary-cta" href="https://founders.senflix.app/">
+          <button
+            type="button"
+            className="primary-cta"
+            onClick={() => setIsContactOpen(true)}
+            aria-haspopup="dialog"
+          >
             Devenir créateur fondateur <Icon name="arrow" />
-          </a>
+          </button>
           <p className="cta-note">Candidature gratuite, sans minimum d’abonnés.</p>
         </div>
       </main>
@@ -873,6 +887,8 @@ export function WhyCarousel() {
           </button>
         </div>
       </dialog>
+
+      <ContactModal open={isContactOpen} onClose={() => setIsContactOpen(false)} />
 
       <footer className="site-footer">
         <span>Senflix</span>
