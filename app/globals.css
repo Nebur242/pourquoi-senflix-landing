@@ -918,26 +918,6 @@ html.is-scroll-locked body {
   animation: contact-spin 700ms linear infinite;
 }
 
-.contact-aside {
-  color: var(--soft-muted);
-  font-size: 13px;
-  line-height: 1.5;
-  text-align: center;
-}
-
-.contact-link {
-  color: var(--muted);
-  text-decoration: underline;
-  text-decoration-color: var(--line-strong);
-  text-underline-offset: 3px;
-  transition: color 180ms ease, text-decoration-color 180ms ease;
-}
-
-.contact-link:hover {
-  color: var(--white);
-  text-decoration-color: var(--red);
-}
-
 .contact-success {
   align-items: center;
   padding-top: 8px;
@@ -980,7 +960,8 @@ html.is-scroll-locked body {
   }
 }
 
-@media (max-width: 360px) {
+/* Phones up to 400px: stack the country select above the number so neither is clipped. */
+@media (max-width: 400px) {
   .contact-phone {
     grid-template-columns: minmax(0, 1fr);
   }

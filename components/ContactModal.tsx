@@ -11,7 +11,6 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 /* ---------- API contract ---------- */
 
 const CAMPAIGN_SLUG = "100-founder-creators";
-const FOUNDERS_URL = "https://founders.senflix.app/";
 const REQUEST_TIMEOUT_MS = 15000;
 
 /** Read the same way as 100-creators-founders-campaign/src/lib/senflix-api.ts (inlined at build time). */
@@ -29,7 +28,7 @@ type SubmitResult = { ok: true } | { ok: false; message: string };
 
 const errorCopy = {
   400: "Ces informations semblent invalides. Vérifiez votre numéro ou votre e-mail, puis réessayez.",
-  404: "Cette campagne n’est pas disponible pour le moment. Vous pouvez candidater directement sur founders.senflix.app.",
+  404: "Cette campagne n’est pas disponible pour le moment. Réessayez plus tard.",
   429: "Trop de tentatives en peu de temps. Patientez quelques minutes avant de réessayer.",
   network: "Connexion impossible. Vérifiez votre connexion Internet et réessayez.",
   server: "Une erreur est survenue de notre côté. Réessayez dans un instant.",
@@ -61,50 +60,117 @@ async function submitInterestLead(body: InterestLeadBody): Promise<SubmitResult>
 
 /* ---------- Validation ---------- */
 
+/** Narrow no-break space, used before French high punctuation (? ! :). */
+const NNBSP = "\u202F";
+
+type Country = {
+  code: string;
+  name: string;
+  /** "au Sénégal", "en Côte d’Ivoire"… for error copy. */
+  inName: string;
+  dial: string;
+  /** Valid national number lengths (digits, without the dial code). */
+  lengths: readonly number[];
+  /**
+   * True when the national format never starts with 0, so a habitual leading
+   * 0 typed by the visitor can be dropped. False where 0 is significant
+   * (Côte d’Ivoire 0X…, Bénin 01…, Congo 0X…).
+   */
+  dropLeadingZero: boolean;
+  /** Placeholder in the country's usual national format. */
+  example: string;
+};
+
 /** MVP countries; Senegal first (default). */
 const COUNTRIES = [
-  { code: "SN", name: "Sénégal", dial: "+221" },
-  { code: "CI", name: "Côte d’Ivoire", dial: "+225" },
-  { code: "BJ", name: "Bénin", dial: "+229" },
-  { code: "TG", name: "Togo", dial: "+228" },
-  { code: "BF", name: "Burkina Faso", dial: "+226" },
-  { code: "ML", name: "Mali", dial: "+223" },
-  { code: "NE", name: "Niger", dial: "+227" },
-  { code: "GN", name: "Guinée", dial: "+224" },
-  { code: "CM", name: "Cameroun", dial: "+237" },
-  { code: "CG", name: "Congo", dial: "+242" },
-] as const;
+  { code: "SN", name: "Sénégal", inName: "au Sénégal", dial: "+221", lengths: [9], dropLeadingZero: true, example: "77 123 45 67" },
+  { code: "CI", name: "Côte d’Ivoire", inName: "en Côte d’Ivoire", dial: "+225", lengths: [10], dropLeadingZero: false, example: "07 01 02 03 04" },
+  { code: "BJ", name: "Bénin", inName: "au Bénin", dial: "+229", lengths: [8, 10], dropLeadingZero: false, example: "01 97 12 34 56" },
+  { code: "TG", name: "Togo", inName: "au Togo", dial: "+228", lengths: [8], dropLeadingZero: true, example: "90 12 34 56" },
+  { code: "BF", name: "Burkina Faso", inName: "au Burkina Faso", dial: "+226", lengths: [8], dropLeadingZero: true, example: "70 12 34 56" },
+  { code: "ML", name: "Mali", inName: "au Mali", dial: "+223", lengths: [8], dropLeadingZero: true, example: "76 12 34 56" },
+  { code: "NE", name: "Niger", inName: "au Niger", dial: "+227", lengths: [8], dropLeadingZero: true, example: "96 12 34 56" },
+  { code: "GN", name: "Guinée", inName: "en Guinée", dial: "+224", lengths: [9], dropLeadingZero: true, example: "621 12 34 56" },
+  { code: "CM", name: "Cameroun", inName: "au Cameroun", dial: "+237", lengths: [9], dropLeadingZero: true, example: "6 71 23 45 67" },
+  { code: "CG", name: "Congo", inName: "au Congo", dial: "+242", lengths: [9], dropLeadingZero: false, example: "06 123 4567" },
+] as const satisfies readonly Country[];
 
 type CountryCode = (typeof COUNTRIES)[number]["code"];
 type Channel = "phone" | "email";
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+/*
+ * Close to validator.js isEmail defaults: dot-atom local part (no leading,
+ * trailing or consecutive dots), domain labels that neither start nor end
+ * with a hyphen (no underscores), and an alphabetic TLD of 2+ characters.
+ */
+const EMAIL_LOCAL = /^[\p{L}\p{N}!#$%&'*+/=?^_`{|}~-]+(?:\.[\p{L}\p{N}!#$%&'*+/=?^_`{|}~-]+)*$/u;
+const EMAIL_DOMAIN = /^(?:[\p{L}\p{N}](?:[\p{L}\p{N}-]{0,61}[\p{L}\p{N}])?\.)+\p{L}{2,63}$/u;
 const E164_PATTERN = /^\+[1-9]\d{7,14}$/;
 
-/**
- * Combine the dial code with the local number, stripping spaces, dashes, dots
- * and parentheses. A number typed in international form (+… or 00…) is kept
- * as-is so visitors who paste their full number are not double-prefixed.
- */
-function normalizePhone(dialCode: string, localNumber: string) {
-  const compact = localNumber.replace(/[\s\-.()]/g, "");
-  if (compact.startsWith("+")) return compact;
-  if (compact.startsWith("00")) return `+${compact.slice(2)}`;
-  return `${dialCode}${compact}`;
+function isValidEmail(value: string) {
+  if (value.length > 254) return false;
+  const at = value.lastIndexOf("@");
+  if (at <= 0) return false;
+  const local = value.slice(0, at);
+  const domain = value.slice(at + 1);
+  return local.length <= 64 && EMAIL_LOCAL.test(local) && EMAIL_DOMAIN.test(domain);
 }
 
-function validate(channel: Channel, dialCode: string, phone: string, email: string) {
+function formatLengths(lengths: readonly number[]) {
+  return lengths.length === 1 ? `${lengths[0]}` : `${lengths.slice(0, -1).join(", ")} ou ${lengths[lengths.length - 1]}`;
+}
+
+type PhoneResult = { value: string } | { error: string };
+
+/**
+ * Turn what the visitor typed into E.164, stripping spaces, dashes, dots and
+ * parentheses.
+ * - A number in international form (+… or 00…) is kept as-is (general E.164).
+ * - Otherwise it is read as a national number for the selected country: a
+ *   repeated dial code typed without "+" (221 77…) is dropped, as is a
+ *   habitual leading 0 where the national format has none, and the national
+ *   length is enforced.
+ */
+function normalizePhone(country: Country, input: string): PhoneResult {
+  const invalid = { error: "Ce numéro ne semble pas valide. Vérifiez l’indicatif et les chiffres saisis." };
+  const compact = input.replace(/[\s\-.()]/g, "");
+  if (compact.startsWith("+") || compact.startsWith("00")) {
+    const full = compact.startsWith("+") ? compact : `+${compact.slice(2)}`;
+    return E164_PATTERN.test(full) ? { value: full } : invalid;
+  }
+  if (!/^\d+$/.test(compact)) return invalid;
+
+  const dialDigits = country.dial.slice(1);
+  const maxLength = Math.max(...country.lengths);
+  let national = compact;
+  if (national.startsWith(dialDigits) && national.length > maxLength) {
+    national = national.slice(dialDigits.length);
+  }
+  if (
+    country.dropLeadingZero &&
+    national.startsWith("0") &&
+    !country.lengths.includes(national.length) &&
+    country.lengths.includes(national.length - 1)
+  ) {
+    national = national.slice(1);
+  }
+  if (!country.lengths.includes(national.length)) {
+    return {
+      error: `Un numéro ${country.inName} comporte ${formatLengths(country.lengths)} chiffres (ex. ${country.example}).`,
+    };
+  }
+  const full = `${country.dial}${national}`;
+  return E164_PATTERN.test(full) ? { value: full } : invalid;
+}
+
+function validate(channel: Channel, country: Country, phone: string, email: string) {
   if (channel === "phone") {
     if (!phone.trim()) return { error: "Indiquez votre numéro de téléphone." };
-    const normalized = normalizePhone(dialCode, phone);
-    if (!E164_PATTERN.test(normalized)) {
-      return { error: "Ce numéro ne semble pas valide. Vérifiez l’indicatif et les chiffres saisis." };
-    }
-    return { value: normalized };
+    return normalizePhone(country, phone);
   }
   const trimmed = email.trim();
   if (!trimmed) return { error: "Indiquez votre adresse e-mail." };
-  if (trimmed.length > 254 || !EMAIL_PATTERN.test(trimmed)) {
+  if (!isValidEmail(trimmed)) {
     return { error: "Cette adresse e-mail ne semble pas valide (ex. nom@exemple.com)." };
   }
   return { value: trimmed.toLowerCase() };
@@ -150,7 +216,10 @@ export function ContactModal({ open, onClose }: Readonly<{ open: boolean; onClos
 
   const dialogRef = useRef<HTMLDialogElement>(null);
   const fieldRef = useRef<HTMLInputElement>(null);
+  const formTitleRef = useRef<HTMLHeadingElement>(null);
   const successTitleRef = useRef<HTMLHeadingElement>(null);
+  /** Mirrors whether the dialog is open, for requests that resolve after it closed. */
+  const openRef = useRef(false);
   const returnFocusRef = useRef<HTMLElement | null>(null);
   const backdropPressRef = useRef(false);
 
@@ -164,7 +233,7 @@ export function ContactModal({ open, onClose }: Readonly<{ open: boolean; onClos
 
   const isConfigured = API_BASE !== "";
   const isSubmitting = status.kind === "submitting";
-  const dialCode = COUNTRIES.find((item) => item.code === country)?.dial ?? "+221";
+  const selectedCountry: Country = COUNTRIES.find((item) => item.code === country) ?? COUNTRIES[0];
 
   /* Open/close the native dialog from the `open` prop. */
   useLayoutEffect(() => {
@@ -174,8 +243,14 @@ export function ContactModal({ open, onClose }: Readonly<{ open: boolean; onClos
       const focused = document.activeElement;
       returnFocusRef.current = focused instanceof HTMLElement && focused !== document.body ? focused : null;
       document.documentElement.classList.add("is-scroll-locked");
+      openRef.current = true;
       dialog.showModal();
-      (fieldRef.current ?? dialog.querySelector<HTMLElement>(".contact-close"))?.focus({ preventScroll: true });
+      // On touch devices, focusing the input pops the keyboard over the content: focus the heading instead.
+      const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
+      const target = coarsePointer
+        ? (formTitleRef.current ?? successTitleRef.current)
+        : (fieldRef.current ?? dialog.querySelector<HTMLElement>(".contact-close"));
+      target?.focus({ preventScroll: true });
     } else if (!open && dialog.open) {
       dialog.close();
     }
@@ -191,6 +266,7 @@ export function ContactModal({ open, onClose }: Readonly<{ open: boolean; onClos
 
   /* Runs for every close path (button, Escape, backdrop). */
   function handleClose() {
+    openRef.current = false;
     document.documentElement.classList.remove("is-scroll-locked");
     backdropPressRef.current = false;
     if (status.kind === "success") {
@@ -245,9 +321,9 @@ export function ContactModal({ open, onClose }: Readonly<{ open: boolean; onClos
     event.preventDefault();
     if (isSubmitting) return;
 
-    const result = validate(channel, dialCode, phone, email);
+    const result = validate(channel, selectedCountry, phone, email);
     if ("error" in result) {
-      setFieldError(result.error ?? null);
+      setFieldError(result.error);
       setStatus({ kind: "idle" });
       fieldRef.current?.focus();
       return;
@@ -255,7 +331,7 @@ export function ContactModal({ open, onClose }: Readonly<{ open: boolean; onClos
     setFieldError(null);
 
     if (!isConfigured) {
-      setStatus({ kind: "error", message: "Le formulaire est momentanément indisponible." });
+      setStatus({ kind: "error", message: "Le formulaire est momentanément indisponible. Réessayez plus tard." });
       return;
     }
 
@@ -265,7 +341,12 @@ export function ContactModal({ open, onClose }: Readonly<{ open: boolean; onClos
         ? { phone: result.value, source: "pourquoi", website }
         : { email: result.value, source: "pourquoi", website };
     const outcome = await submitInterestLead(body);
-    setStatus(outcome.ok ? { kind: "success" } : { kind: "error", message: outcome.message });
+    if (outcome.ok) {
+      setStatus({ kind: "success" });
+    } else {
+      // A failure that lands after the dialog was closed must not greet the next opening.
+      setStatus(openRef.current ? { kind: "error", message: outcome.message } : { kind: "idle" });
+    }
   }
 
   const describedBy = [channel === "phone" ? hintId : null, fieldError ? errorId : null].filter(Boolean).join(" ");
@@ -303,7 +384,7 @@ export function ContactModal({ open, onClose }: Readonly<{ open: boolean; onClos
                 </svg>
               </span>
               <h2 ref={successTitleRef} id={titleId} className="contact-title" tabIndex={-1}>
-                Merci !
+                {`Merci${NNBSP}!`}
               </h2>
               <p id={descriptionId} className="contact-lead" role="status">
                 L’équipe Senflix vous contactera très bientôt pour vous présenter le programme des créateurs
@@ -312,12 +393,6 @@ export function ContactModal({ open, onClose }: Readonly<{ open: boolean; onClos
               <button type="button" className="primary-cta contact-submit" onClick={requestClose}>
                 Fermer
               </button>
-              <p className="contact-aside">
-                Envie d’aller plus vite ?{" "}
-                <a className="contact-link" href={FOUNDERS_URL} target="_blank" rel="noopener">
-                  Candidater dès maintenant
-                </a>
-              </p>
             </div>
           ) : (
             <form className="contact-form" noValidate onSubmit={handleSubmit} aria-busy={isSubmitting}>
@@ -325,26 +400,21 @@ export function ContactModal({ open, onClose }: Readonly<{ open: boolean; onClos
                 <span className="eyebrow-rule" aria-hidden="true" />
                 Créateurs fondateurs
               </p>
-              <h2 id={titleId} className="contact-title">
+              <h2 ref={formTitleRef} id={titleId} className="contact-title" tabIndex={-1}>
                 Parlons de votre contenu
               </h2>
               <p id={descriptionId} className="contact-lead">
-                Laissez-nous votre numéro ou votre e-mail : l’équipe Senflix vous recontacte pour vous présenter le
-                programme.
+                {`Laissez-nous votre numéro ou votre e-mail${NNBSP}: l’équipe Senflix vous recontacte pour vous présenter le programme.`}
               </p>
 
               {isConfigured ? null : (
                 <p className="contact-notice" role="alert">
-                  Le formulaire est momentanément indisponible. Vous pouvez candidater directement sur{" "}
-                  <a className="contact-link" href={FOUNDERS_URL} target="_blank" rel="noopener">
-                    founders.senflix.app
-                  </a>
-                  .
+                  Le formulaire est momentanément indisponible. Réessayez plus tard.
                 </p>
               )}
 
               <fieldset className="contact-toggle">
-                <legend className="visually-hidden">Être contacté par</legend>
+                <legend className="visually-hidden">Me contacter par</legend>
                 {(
                   [
                     ["phone", "Téléphone"],
@@ -377,12 +447,15 @@ export function ContactModal({ open, onClose }: Readonly<{ open: boolean; onClos
                       id={countryId}
                       className="contact-input contact-select"
                       value={country}
-                      onChange={(event) => setCountry(event.target.value as CountryCode)}
+                      onChange={(event) => {
+                        setCountry(event.target.value as CountryCode);
+                        setFieldError(null);
+                      }}
                       autoComplete="tel-country-code"
                     >
                       {COUNTRIES.map((item) => (
                         <option key={item.code} value={item.code}>
-                          {item.name} ({item.dial})
+                          {`${item.dial} ${item.name}`}
                         </option>
                       ))}
                     </select>
@@ -394,9 +467,12 @@ export function ContactModal({ open, onClose }: Readonly<{ open: boolean; onClos
                       type="tel"
                       inputMode="tel"
                       autoComplete="tel-national"
-                      placeholder="77 123 45 67"
+                      placeholder={selectedCountry.example}
                       value={phone}
-                      onChange={(event) => setPhone(event.target.value)}
+                      onChange={(event) => {
+                        setPhone(event.target.value);
+                        setFieldError(null);
+                      }}
                       aria-invalid={fieldError ? true : undefined}
                       aria-describedby={describedBy || undefined}
                       maxLength={24}
@@ -423,7 +499,10 @@ export function ContactModal({ open, onClose }: Readonly<{ open: boolean; onClos
                     spellCheck={false}
                     placeholder="nom@exemple.com"
                     value={email}
-                    onChange={(event) => setEmail(event.target.value)}
+                    onChange={(event) => {
+                      setEmail(event.target.value);
+                      setFieldError(null);
+                    }}
                     aria-invalid={fieldError ? true : undefined}
                     aria-describedby={describedBy || undefined}
                     maxLength={254}
@@ -462,20 +541,13 @@ export function ContactModal({ open, onClose }: Readonly<{ open: boolean; onClos
                     Envoi en cours…
                   </>
                 ) : (
-                  "Être recontacté"
+                  "Me recontacter"
                 )}
               </button>
 
               <p className="contact-status" role="status" aria-live="polite">
                 {status.kind === "submitting" ? <span className="visually-hidden">Envoi en cours…</span> : null}
                 {status.kind === "error" ? <span className="contact-status-error">{status.message}</span> : null}
-              </p>
-
-              <p className="contact-aside">
-                Vous préférez candidater maintenant ?{" "}
-                <a className="contact-link" href={FOUNDERS_URL} target="_blank" rel="noopener">
-                  founders.senflix.app
-                </a>
               </p>
             </form>
           )}
