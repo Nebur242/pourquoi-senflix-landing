@@ -84,7 +84,11 @@ p {
 .site-shell {
   position: relative;
   isolation: isolate;
-  height: 100svh;
+  /* --consent-offset: space covered by the open cookie banner (set from JS on <html>); the shell
+     shrinks by it so the main CTA stays above the banner. */
+  --consent-shrink: var(--consent-offset, 0px);
+
+  height: calc(100svh - var(--consent-shrink));
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -234,7 +238,7 @@ p {
 /* ---------- Showcase grid ---------- */
 
 .showcase {
-  --frame-size: min(100%, calc(100svh - var(--chrome-h)));
+  --frame-size: min(100%, calc(100svh - var(--chrome-h) - var(--consent-shrink, 0px)));
 
   width: calc(100% - 32px);
   max-width: 640px;
@@ -1314,7 +1318,7 @@ html.is-scroll-locked body {
 
   .showcase {
     /* Frame fits between header, footer, controls and padding. */
-    --frame-size: min(calc(100svh - 236px), 46vw, 640px);
+    --frame-size: min(calc(100svh - 236px - var(--consent-shrink, 0px)), 46vw, 640px);
 
     max-width: 1240px;
     grid-template-columns: minmax(0, 1fr) var(--frame-size);
@@ -1542,6 +1546,7 @@ html.is-scroll-locked body {
   .site-shell {
     height: auto;
     min-height: 100svh;
+    padding-bottom: var(--consent-shrink, 0px);
     overflow: visible;
   }
 
@@ -1558,7 +1563,7 @@ html.is-scroll-locked body {
 
 @media (min-width: 1024px) and (max-height: 640px) {
   .showcase {
-    --frame-size: min(calc(100svh - 220px), 46vw);
+    --frame-size: min(calc(100svh - 220px - var(--consent-shrink, 0px)), 46vw);
   }
 
   .hero-title {
@@ -1695,6 +1700,11 @@ html.is-scroll-locked body {
   transition: color 160ms ease;
 }
 
+/* Redundant while the banner is open, and it would crowd the CTA in the shrunken mobile shell. */
+.has-consent-banner .shell-cookies {
+  visibility: hidden;
+}
+
 @keyframes consent-in {
   from {
     opacity: 0;
@@ -1704,6 +1714,32 @@ html.is-scroll-locked body {
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+/* Phones: tighter card so the shrunken shell keeps a usable brochure above it. */
+@media (max-width: 719px) {
+  .consent-banner {
+    bottom: max(12px, env(safe-area-inset-bottom));
+    gap: 6px;
+    padding: 12px 14px;
+  }
+
+  .consent-title {
+    font-size: 11px;
+  }
+
+  .consent-text {
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .consent-actions {
+    gap: 8px;
+  }
+
+  .consent-button {
+    min-height: 40px;
   }
 }
 
@@ -1736,6 +1772,11 @@ html.is-scroll-locked body {
 
   .shell-cookies {
     display: none;
+  }
+
+  /* The desktop strip already sits over the footer (48px) and the showcase's bottom padding (16px). */
+  .site-shell {
+    --consent-shrink: max(0px, calc(var(--consent-offset, 0px) - 64px));
   }
 }
 

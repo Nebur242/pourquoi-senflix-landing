@@ -58,8 +58,8 @@ export const metadata: Metadata = {
   },
 };
 
-/** .env.production also applies to Vercel preview builds; keep preview traffic out of GA. */
-const gaId = process.env.VERCEL_ENV === "preview" ? "" : GA_MEASUREMENT_ID;
+/** Fail closed: only Vercel production builds load GA (preview, local `next build`/`next start` and dev send nothing). */
+const gaId = process.env.VERCEL_ENV === "production" ? GA_MEASUREMENT_ID : "";
 
 export const viewport: Viewport = {
   themeColor: "#050505",

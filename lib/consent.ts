@@ -7,9 +7,11 @@ type StoredConsent = { analytics: AnalyticsConsent; ts: number };
 export const CONSENT_STORAGE_KEY = "senflix_consent";
 /** Re-ask after ~6 months (CNIL allows up to 13). */
 export const CONSENT_MAX_AGE_MS = 182 * 24 * 60 * 60 * 1000;
+/** GA cookie lifetime: 395 days = 13 months (default GA is 2 years). */
+export const GA_COOKIE_EXPIRES_SECONDS = 395 * 24 * 60 * 60;
 /** Window event that reopens the banner (same name as app-landing). */
 export const OPEN_CONSENT_EVENT = "senflix:open-consent";
-export const PRIVACY_POLICY_URL = "https://founders.senflix.app/politique-de-confidentialite";
+export const PRIVACY_POLICY_URL = "https://founders.senflix.app/politique-de-confidentialite#cookies";
 
 declare global {
   interface Window {
@@ -21,6 +23,7 @@ declare global {
  * Inline <head> script that must run before gtag.js: defines dataLayer/gtag, sets every
  * signal to denied, then restores a still-valid "granted" choice so returning visitors
  * are measured from the first hit. Ads signals are never granted (no ads on the site).
+ * Also caps GA cookies at 395 days (13 months, per the privacy policy) before any config runs.
  */
 export const consentDefaultsScript = `
 window.dataLayer = window.dataLayer || [];
@@ -32,6 +35,7 @@ window.gtag('consent', 'default', {
   analytics_storage: 'denied',
   wait_for_update: 500
 });
+window.gtag('set', { cookie_expires: ${GA_COOKIE_EXPIRES_SECONDS} });
 try {
   var c = JSON.parse(window.localStorage.getItem(${JSON.stringify(CONSENT_STORAGE_KEY)}) || 'null');
   if (c && c.analytics === 'granted' && typeof c.ts === 'number' && Date.now() - c.ts < ${CONSENT_MAX_AGE_MS}) {

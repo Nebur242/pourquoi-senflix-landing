@@ -32,25 +32,35 @@ npm run build
 ## Analytics
 
 Google Analytics 4 est chargé dans `app/layout.tsx` via `@next/third-parties`
-uniquement si `NEXT_PUBLIC_GA_MEASUREMENT_ID` est défini (valeur inlinée au
-build). L’ID public de production (`G-K0HZW1Z379`) est versionné dans
-`.env.production` : seuls les builds de production le chargent, et les builds
-de preview Vercel (`VERCEL_ENV=preview`) n’affichent pas GA. En `npm run dev`
-sans la variable, aucun script GA n’est rendu et `trackEvent` ne fait rien.
+uniquement pour les builds de production Vercel (`VERCEL_ENV=production`) et si
+`NEXT_PUBLIC_GA_MEASUREMENT_ID` est un ID valide (`G-XXXX`, valeur inlinée au
+build ; un ID mal formé désactive GA). L’ID public de production
+(`G-K0HZW1Z379`) est versionné dans `.env.production` (valeurs publiques
+uniquement). Tout le reste échoue fermé : previews Vercel, `npm run dev`, et un
+`npm run build`/`next start` local n’affichent ni GA ni bandeau, et
+`trackEvent` ne fait rien. Pour tester GA en local, construire avec
+`VERCEL_ENV=production npm run build` puis `npx next start` (idéalement en
+bloquant `/g/collect` pour ne pas polluer les statistiques).
 
 Consentement (Google Consent Mode v2, mode « advanced ») : un script inline
 dans `<head>` (rendu seulement quand GA l’est) déclare `dataLayer`/`gtag` et
 place tous les signaux à `denied` avant le chargement de gtag.js. Tant que le
 visiteur n’a pas accepté, GA n’envoie que des pings sans cookie (`gcs=G100`) et
-aucun cookie `_ga` n’est déposé. Le bandeau en bas de page propose « Accepter »
+aucun cookie `_ga` n’est déposé. Le même script fixe
+`cookie_expires` à 395 jours (13 mois, comme annoncé dans la politique de
+confidentialité) avant la configuration GA. Le bandeau en bas de page propose « Accepter »
 et « Refuser » à égalité ; « Accepter » n’accorde que `analytics_storage`
 (les signaux publicitaires restent toujours refusés). Le choix est stocké dans
 `localStorage` (`senflix_consent` = `{ analytics, ts }`) et redemandé après
 6 mois ; un choix « accepté » encore valide est rétabli dès le premier hit.
 « Refuser » supprime aussi les cookies `_ga`/`_ga_*` existants. Le lien
 « Gérer les cookies » (pied de page sur desktop, sous le CTA sur mobile)
-rouvre le bandeau via l’événement `senflix:open-consent`. Sans ID GA ou en
-preview, ni bandeau ni lien ne sont affichés.
+rouvre le bandeau via l’événement `senflix:open-consent`. Le lien « En savoir
+plus » pointe vers
+`https://founders.senflix.app/politique-de-confidentialite#cookies`. Quand GA
+est désactivé, ni bandeau ni lien ne sont affichés. Tant que le bandeau est
+ouvert, sa hauteur est publiée dans `--consent-offset` et la page se réduit
+d’autant, pour que le CTA principal reste visible et cliquable au-dessus.
 
 Événements envoyés (aucune donnée personnelle) :
 

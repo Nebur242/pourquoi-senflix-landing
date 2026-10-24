@@ -1,7 +1,9 @@
 import { sendGAEvent } from "@next/third-parties/google";
 
-/** GA4 measurement ID, inlined at build time. Unset → GA is not rendered and events are dropped. */
-export const GA_MEASUREMENT_ID = (process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? "").trim();
+const rawMeasurementId = (process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? "").trim();
+
+/** GA4 measurement ID, inlined at build time. Unset or malformed → GA is not rendered and events are dropped. */
+export const GA_MEASUREMENT_ID = /^G-[A-Z0-9]+$/.test(rawMeasurementId) ? rawMeasurementId : "";
 
 type EventParams = Record<string, string | number | boolean>;
 

@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { OPEN_CONSENT_EVENT, PRIVACY_POLICY_URL, readConsent, saveConsent } from "@/lib/consent";
 import type { AnalyticsConsent } from "@/lib/consent";
 
-/** False when GA is disabled (no ID / preview): nothing to consent to, so no banner and no settings link. */
+/** False when GA is disabled (not a Vercel production build, or no valid ID): nothing to consent to, so no banner and no settings link. */
 const ConsentEnabledContext = createContext(false);
 
 /* Choice store: localStorage plus an in-memory copy for when storage is blocked. */
@@ -60,7 +60,30 @@ export function ConsentProvider({ enabled, children }: { enabled: boolean; child
 function ConsentBanner({ autoFocus, onChoose }: { autoFocus: boolean; onChoose: (value: AnalyticsConsent) => void }) {
   const titleId = useId();
   const descriptionId = useId();
+  const bannerRef = useRef<HTMLDivElement>(null);
   const firstButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    // Publish the space the banner covers so the mobile shell can shrink and keep the main CTA reachable.
+    const banner = bannerRef.current;
+    if (!banner) return;
+    const root = document.documentElement;
+    const update = () => {
+      const bottom = Number.parseFloat(getComputedStyle(banner).bottom) || 0;
+      root.style.setProperty("--consent-offset", `${Math.ceil(banner.offsetHeight + bottom + 8)}px`);
+    };
+    update();
+    root.classList.add("has-consent-banner");
+    const observer = new ResizeObserver(update);
+    observer.observe(banner);
+    window.addEventListener("resize", update);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", update);
+      root.style.removeProperty("--consent-offset");
+      root.classList.remove("has-consent-banner");
+    };
+  }, []);
 
   useEffect(() => {
     // Only move focus when the visitor reopened the banner themselves; never steal it on page load.
@@ -68,13 +91,20 @@ function ConsentBanner({ autoFocus, onChoose }: { autoFocus: boolean; onChoose: 
   }, [autoFocus]);
 
   return (
-    <div className="consent-banner" role="dialog" aria-modal="false" aria-labelledby={titleId} aria-describedby={descriptionId}>
+    <div
+      ref={bannerRef}
+      className="consent-banner"
+      role="dialog"
+      aria-modal="false"
+      aria-labelledby={titleId}
+      aria-describedby={descriptionId}
+    >
       <p className="consent-title" id={titleId}>
         Cookies de mesure d’audience
       </p>
       <p className="consent-text" id={descriptionId}>
-        Nous utilisons des cookies de mesure d’audience (Google Analytics) pour améliorer le site. Vous pouvez
-        accepter ou refuser.{" "}
+        Nous utilisons Google Analytics pour mesurer l’audience du site. Si vous acceptez, des cookies de mesure
+        sont déposés ; si vous refusez, seules des mesures sans cookie ni identifiant persistant sont envoyées.{" "}
         <a className="consent-link" href={PRIVACY_POLICY_URL} target="_blank" rel="noopener noreferrer">
           En savoir plus
         </a>

@@ -6,6 +6,7 @@ dist/
 .vercel/
 .env*
 !.env.example
+# .env.production IS committed: only public values (e.g. the GA measurement ID), never secrets.
 !.env.production
 *.log
 .DS_Store
