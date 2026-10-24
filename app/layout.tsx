@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Anton, Geist } from "next/font/google";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import { ConsentProvider } from "@/components/CookieConsent";
 import { GA_MEASUREMENT_ID } from "@/lib/analytics";
+import { consentDefaultsScript } from "@/lib/consent";
 import "./globals.css";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist" });
@@ -70,11 +72,15 @@ export default function RootLayout({
   return (
     <html lang="fr" className={`${geist.variable} ${anton.variable}`}>
       <head>
+        {/* Consent Mode defaults must be queued before the GA config below (plain inline script: runs during parse). */}
+        {gaId ? <script id="consent-defaults" dangerouslySetInnerHTML={{ __html: consentDefaultsScript }} /> : null}
         <link rel="preload" as="image" type="image/webp" href="/brochures/01_le_constat.webp" />
         <link rel="preload" as="image" type="image/webp" href="/brochures/02_le_defi.webp" />
         <link rel="preload" as="image" type="image/webp" href="/brochures/03_contenu_premium.webp" />
       </head>
-      <body>{children}</body>
+      <body>
+        <ConsentProvider enabled={Boolean(gaId)}>{children}</ConsentProvider>
+      </body>
       {gaId ? <GoogleAnalytics gaId={gaId} /> : null}
     </html>
   );

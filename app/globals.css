@@ -1574,6 +1574,171 @@ html.is-scroll-locked body {
   }
 }
 
+/* ---------- Cookie consent ---------- */
+
+/* Small, non-blocking card pinned to the bottom; sits under <dialog> top layer. */
+.consent-banner {
+  position: fixed;
+  right: 16px;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  left: 16px;
+  z-index: 40;
+  max-width: 440px;
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--panel) 94%, transparent);
+  box-shadow: 0 18px 48px #000000a6;
+  backdrop-filter: blur(12px);
+  animation: consent-in 260ms var(--ease-out) both;
+}
+
+.consent-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.consent-text {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+.consent-link {
+  color: var(--white);
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 2px;
+  transition: text-decoration-color 160ms ease;
+}
+
+.consent-link:hover {
+  text-decoration-color: currentColor;
+}
+
+.consent-link:focus-visible {
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.consent-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+/* Same style for both choices: equal prominence. */
+.consent-button {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: #ffffff0d;
+  color: var(--white);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 180ms ease, background 180ms ease;
+}
+
+.consent-button:hover {
+  border-color: var(--red);
+  background: #ffffff17;
+}
+
+.consent-button:focus-visible {
+  outline-offset: 2px;
+}
+
+.footer-cookies {
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+  transition: color 160ms ease;
+}
+
+.footer-cookies:hover,
+.shell-cookies:hover {
+  color: var(--white);
+}
+
+.shell-cookies {
+  position: absolute;
+  bottom: max(6px, env(safe-area-inset-bottom));
+  left: 50%;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 0;
+  background: none;
+  color: var(--soft-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  transform: translateX(-50%);
+  transition: color 160ms ease;
+}
+
+@keyframes consent-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (min-width: 720px) {
+  .consent-banner {
+    right: auto;
+    left: 24px;
+    bottom: 24px;
+  }
+}
+
+/* Desktop: compact strip over the left footer, clear of the CTA and slideshow controls. */
+@media (min-width: 1024px) {
+  .consent-banner {
+    bottom: 12px;
+    max-width: 640px;
+    grid-template-columns: 1fr auto;
+    column-gap: 24px;
+    row-gap: 4px;
+    padding: 12px 14px 12px 20px;
+  }
+
+  .consent-actions {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
+    grid-template-columns: repeat(2, 120px);
+    margin-top: 0;
+  }
+
+  .shell-cookies {
+    display: none;
+  }
+}
+
 /* ---------- Reduced motion ---------- */
 
 @media (prefers-reduced-motion: reduce) {

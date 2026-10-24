@@ -12,6 +12,7 @@ import type {
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { trackEvent } from "@/lib/analytics";
 import { ContactModal } from "./ContactModal";
+import { CookieSettingsButton } from "./CookieConsent";
 
 /** Time each brochure stays on screen while the slideshow plays. */
 const AUTOPLAY_MS = 8000;
@@ -903,7 +904,10 @@ export function WhyCarousel() {
         <span>Senflix</span>
         <span className="footer-rule" aria-hidden="true" />
         <span>Le meilleur du contenu africain.</span>
+        <CookieSettingsButton className="footer-cookies" />
       </footer>
+      {/* The footer is desktop-only; below 1024px the cookie settings link sits under the CTA. */}
+      <CookieSettingsButton className="shell-cookies" />
     </div>
   );
 }

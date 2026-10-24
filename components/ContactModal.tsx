@@ -8,6 +8,7 @@ import type {
 } from "react";
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { trackEvent } from "@/lib/analytics";
+import { PRIVACY_POLICY_URL } from "@/lib/consent";
 
 /* ---------- API contract ---------- */
 
@@ -552,7 +553,7 @@ export function ContactModal({ open, onClose }: Readonly<{ open: boolean; onClos
                 En envoyant, vous acceptez que Senflix vous recontacte au sujet du programme.{" "}
                 <a
                   className="contact-consent-link"
-                  href="https://founders.senflix.app/politique-de-confidentialite"
+                  href={PRIVACY_POLICY_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
