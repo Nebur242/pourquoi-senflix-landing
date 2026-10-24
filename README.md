@@ -25,5 +25,21 @@ npm run build
 - `app/` — route principale, métadonnées, robots et sitemap.
 - `components/WhyCarousel.tsx` — carrousel accessible et CTA.
 - `public/brochures/` — six visuels source fournis pour la page.
+- `lib/analytics.ts` — helper `trackEvent` pour Google Analytics 4.
+
+## Analytics
+
+Google Analytics 4 est chargé dans `app/layout.tsx` via `@next/third-parties`
+uniquement si `NEXT_PUBLIC_GA_MEASUREMENT_ID` est défini (valeur inlinée au
+build, à configurer dans Vercel). Sans cette variable, aucun script GA n’est
+rendu et `trackEvent` ne fait rien.
+
+Événements envoyés (aucune donnée personnelle) :
+
+- `cta_click` `{ location: "header" | "main", target: "contact_modal" }` —
+  `components/WhyCarousel.tsx`, bouton d’en-tête et CTA principal
+  « Devenir créateur fondateur ».
+- `generate_lead` `{ method: "phone" | "email", location: "contact_modal" }` —
+  `components/ContactModal.tsx`, après un envoi réussi du formulaire.
 
 Le déploiement et la publication ne font pas partie de cette version locale.

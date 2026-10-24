@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Anton, Geist } from "next/font/google";
+import { GoogleAnalytics } from "@next/third-parties/google";
+import { GA_MEASUREMENT_ID } from "@/lib/analytics";
 import "./globals.css";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist" });
@@ -70,6 +72,7 @@ export default function RootLayout({
         <link rel="preload" as="image" type="image/webp" href="/brochures/03_contenu_premium.webp" />
       </head>
       <body>{children}</body>
+      {GA_MEASUREMENT_ID ? <GoogleAnalytics gaId={GA_MEASUREMENT_ID} /> : null}
     </html>
   );
 }

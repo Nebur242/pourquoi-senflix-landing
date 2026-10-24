@@ -7,6 +7,7 @@ import type {
   PointerEvent as ReactPointerEvent,
 } from "react";
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { trackEvent } from "@/lib/analytics";
 
 /* ---------- API contract ---------- */
 
@@ -342,6 +343,8 @@ export function ContactModal({ open, onClose }: Readonly<{ open: boolean; onClos
         : { email: result.value, source: "pourquoi", website };
     const outcome = await submitInterestLead(body);
     if (outcome.ok) {
+      // GA4 recommended lead event; only the channel is sent, never the phone/e-mail itself.
+      trackEvent("generate_lead", { method: channel, location: "contact_modal" });
       setStatus({ kind: "success" });
     } else {
       // A failure that lands after the dialog was closed must not greet the next opening.

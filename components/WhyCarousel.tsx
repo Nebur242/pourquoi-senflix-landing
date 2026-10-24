@@ -10,6 +10,7 @@ import type {
   SyntheticEvent,
 } from "react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
+import { trackEvent } from "@/lib/analytics";
 import { ContactModal } from "./ContactModal";
 
 /** Time each brochure stays on screen while the slideshow plays. */
@@ -649,6 +650,11 @@ export function WhyCarousel() {
       );
     });
 
+  const openContact = (location: "header" | "main") => {
+    trackEvent("cta_click", { location, target: "contact_modal" });
+    setIsContactOpen(true);
+  };
+
   const playLabel = isPlaying ? "Mettre le diaporama en pause" : "Lancer le diaporama";
 
   return (
@@ -665,7 +671,7 @@ export function WhyCarousel() {
         <button
           type="button"
           className="header-link"
-          onClick={() => setIsContactOpen(true)}
+          onClick={() => openContact("header")}
           aria-haspopup="dialog"
         >
           {/* Only one label is displayed per breakpoint; display:none keeps the hidden one out of the accessible name. */}
@@ -814,7 +820,7 @@ export function WhyCarousel() {
           <button
             type="button"
             className="primary-cta"
-            onClick={() => setIsContactOpen(true)}
+            onClick={() => openContact("main")}
             aria-haspopup="dialog"
           >
             Devenir créateur fondateur <Icon name="arrow" />
