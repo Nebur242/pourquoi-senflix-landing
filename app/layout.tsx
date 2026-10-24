@@ -56,6 +56,9 @@ export const metadata: Metadata = {
   },
 };
 
+/** .env.production also applies to Vercel preview builds; keep preview traffic out of GA. */
+const gaId = process.env.VERCEL_ENV === "preview" ? "" : GA_MEASUREMENT_ID;
+
 export const viewport: Viewport = {
   themeColor: "#050505",
   colorScheme: "dark",
@@ -72,7 +75,7 @@ export default function RootLayout({
         <link rel="preload" as="image" type="image/webp" href="/brochures/03_contenu_premium.webp" />
       </head>
       <body>{children}</body>
-      {GA_MEASUREMENT_ID ? <GoogleAnalytics gaId={GA_MEASUREMENT_ID} /> : null}
+      {gaId ? <GoogleAnalytics gaId={gaId} /> : null}
     </html>
   );
 }

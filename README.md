@@ -31,8 +31,10 @@ npm run build
 
 Google Analytics 4 est chargé dans `app/layout.tsx` via `@next/third-parties`
 uniquement si `NEXT_PUBLIC_GA_MEASUREMENT_ID` est défini (valeur inlinée au
-build, à configurer dans Vercel). Sans cette variable, aucun script GA n’est
-rendu et `trackEvent` ne fait rien.
+build). L’ID public de production (`G-K0HZW1Z379`) est versionné dans
+`.env.production` : seuls les builds de production le chargent, et les builds
+de preview Vercel (`VERCEL_ENV=preview`) n’affichent pas GA. En `npm run dev`
+sans la variable, aucun script GA n’est rendu et `trackEvent` ne fait rien.
 
 Événements envoyés (aucune donnée personnelle) :
 
