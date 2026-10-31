@@ -6,7 +6,7 @@ import type {
   MouseEvent as ReactMouseEvent,
   PointerEvent as ReactPointerEvent,
 } from "react";
-import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { trackEvent } from "@/lib/analytics";
 import { PRIVACY_POLICY_URL } from "@/lib/consent";
 
@@ -353,6 +353,23 @@ export function ContactModal({ open, onClose }: Readonly<{ open: boolean; onClos
     }
   }
 
+  /* Glide the form between the phone and e-mail layouts instead of snapping: the outer box
+     follows the inner content's height through a CSS transition (instant under reduced motion). */
+  const fieldsRef = useCallback((inner: HTMLDivElement | null) => {
+    const outer = inner?.parentElement;
+    if (!inner || !outer) return;
+    const observer = new ResizeObserver(() => {
+      // 0 means the dialog is closed (display: none): fall back to auto so opening never animates.
+      const height = inner.offsetHeight;
+      outer.style.height = height > 0 ? `${height}px` : "";
+    });
+    observer.observe(inner);
+    return () => {
+      observer.disconnect();
+      outer.style.height = "";
+    };
+  }, []);
+
   const describedBy = [channel === "phone" ? hintId : null, fieldError ? errorId : null].filter(Boolean).join(" ");
 
   return (
@@ -417,7 +434,7 @@ export function ContactModal({ open, onClose }: Readonly<{ open: boolean; onClos
                 </p>
               )}
 
-              <fieldset className="contact-toggle">
+              <fieldset className="contact-toggle" data-channel={channel}>
                 <legend className="visually-hidden">Me contacter par</legend>
                 {(
                   [
@@ -438,87 +455,91 @@ export function ContactModal({ open, onClose }: Readonly<{ open: boolean; onClos
                 ))}
               </fieldset>
 
-              {channel === "phone" ? (
-                <div className="contact-field">
-                  <label className="contact-label" htmlFor={fieldId}>
-                    Numéro de téléphone
-                  </label>
-                  <div className="contact-phone">
-                    <label className="visually-hidden" htmlFor={countryId}>
-                      Indicatif pays
-                    </label>
-                    <select
-                      id={countryId}
-                      className="contact-input contact-select"
-                      value={country}
-                      onChange={(event) => {
-                        setCountry(event.target.value as CountryCode);
-                        setFieldError(null);
-                      }}
-                      autoComplete="tel-country-code"
-                    >
-                      {COUNTRIES.map((item) => (
-                        <option key={item.code} value={item.code}>
-                          {`${item.dial} ${item.name}`}
-                        </option>
-                      ))}
-                    </select>
-                    <input
-                      key="phone"
-                      ref={fieldRef}
-                      id={fieldId}
-                      className="contact-input"
-                      type="tel"
-                      inputMode="tel"
-                      autoComplete="tel-national"
-                      placeholder={selectedCountry.example}
-                      value={phone}
-                      onChange={(event) => {
-                        setPhone(event.target.value);
-                        setFieldError(null);
-                      }}
-                      aria-invalid={fieldError ? true : undefined}
-                      aria-describedby={describedBy || undefined}
-                      maxLength={24}
-                    />
-                  </div>
-                  <p id={hintId} className="contact-hint">
-                    WhatsApp de préférence.
-                  </p>
-                </div>
-              ) : (
-                <div className="contact-field">
-                  <label className="contact-label" htmlFor={fieldId}>
-                    Adresse e-mail
-                  </label>
-                  <input
-                    key="email"
-                    ref={fieldRef}
-                    id={fieldId}
-                    className="contact-input"
-                    type="email"
-                    inputMode="email"
-                    autoComplete="email"
-                    autoCapitalize="none"
-                    spellCheck={false}
-                    placeholder="nom@exemple.com"
-                    value={email}
-                    onChange={(event) => {
-                      setEmail(event.target.value);
-                      setFieldError(null);
-                    }}
-                    aria-invalid={fieldError ? true : undefined}
-                    aria-describedby={describedBy || undefined}
-                    maxLength={254}
-                  />
-                </div>
-              )}
+              <div className="contact-fields">
+                <div ref={fieldsRef} className="contact-fields-inner">
+                  {channel === "phone" ? (
+                    <div key="phone" className="contact-field">
+                      <label className="contact-label" htmlFor={fieldId}>
+                        Numéro de téléphone
+                      </label>
+                      <div className="contact-phone">
+                        <label className="visually-hidden" htmlFor={countryId}>
+                          Indicatif pays
+                        </label>
+                        <select
+                          id={countryId}
+                          className="contact-input contact-select"
+                          value={country}
+                          onChange={(event) => {
+                            setCountry(event.target.value as CountryCode);
+                            setFieldError(null);
+                          }}
+                          autoComplete="tel-country-code"
+                        >
+                          {COUNTRIES.map((item) => (
+                            <option key={item.code} value={item.code}>
+                              {`${item.dial} ${item.name}`}
+                            </option>
+                          ))}
+                        </select>
+                        <input
+                          key="phone"
+                          ref={fieldRef}
+                          id={fieldId}
+                          className="contact-input"
+                          type="tel"
+                          inputMode="tel"
+                          autoComplete="tel-national"
+                          placeholder={selectedCountry.example}
+                          value={phone}
+                          onChange={(event) => {
+                            setPhone(event.target.value);
+                            setFieldError(null);
+                          }}
+                          aria-invalid={fieldError ? true : undefined}
+                          aria-describedby={describedBy || undefined}
+                          maxLength={24}
+                        />
+                      </div>
+                      <p id={hintId} className="contact-hint">
+                        WhatsApp de préférence.
+                      </p>
+                    </div>
+                  ) : (
+                    <div key="email" className="contact-field">
+                      <label className="contact-label" htmlFor={fieldId}>
+                        Adresse e-mail
+                      </label>
+                      <input
+                        key="email"
+                        ref={fieldRef}
+                        id={fieldId}
+                        className="contact-input"
+                        type="email"
+                        inputMode="email"
+                        autoComplete="email"
+                        autoCapitalize="none"
+                        spellCheck={false}
+                        placeholder="nom@exemple.com"
+                        value={email}
+                        onChange={(event) => {
+                          setEmail(event.target.value);
+                          setFieldError(null);
+                        }}
+                        aria-invalid={fieldError ? true : undefined}
+                        aria-describedby={describedBy || undefined}
+                        maxLength={254}
+                      />
+                    </div>
+                  )}
 
-              {fieldError ? (
-                <p id={errorId} className="contact-error">
-                  {fieldError}
-                </p>
-              ) : null}
+                  {fieldError ? (
+                    <p id={errorId} className="contact-error">
+                      {fieldError}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
 
               {/* Honeypot: invisible to people, tempting to bots. */}
               <div className="visually-hidden" aria-hidden="true">
